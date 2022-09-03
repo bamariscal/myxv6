@@ -109,7 +109,7 @@ argfd(int n, int *pfd, struct file **pf)
 uint64
 sys_getprocs(void)
 {
-struct file *f;
+  struct file *f;
   uint64 st; // user pointer to struct stat
 
   if(argfd(0, 0, &f) < 0 || argaddr(1, &st) < 0)
