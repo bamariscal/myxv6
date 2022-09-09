@@ -643,8 +643,8 @@ procdump(void)
   [SLEEPING]  "sleep ",
   [RUNNABLE]  "runble",
   [RUNNING]   "run   ",
-  [ZOMBIE]    "zombie"
-  };
+  [ZOMBIE]    "zombie",
+   };
   struct proc *p;
   char *state;
 
@@ -661,44 +661,18 @@ procdump(void)
   }
 }
 
-int
-procinfo(struct file *f, uint64 addr)
+void
+procinfo(uint64 addr)
 {
-
-static char *states[] = {
-  [UNUSED]    "unused",
-  [SLEEPING]  "sleep ",
-  [RUNNABLE]  "runble",
-  [RUNNING]   "run   ",
-  [ZOMBIE]    "zombie"
-  };
-  struct proc *p;
-  char *state;
-
- //copied from proc.procdump
-  for(p = proc; p < &proc[NPROC]; p++){
-    if(p->state == UNUSED)
-      continue;
-    if(p->state >= 0 && p->state < NELEM(states) && states[p->state])
-      state = states[p->state];
-    else
-      state = "???";
-    printf("%d %s %s", p->pid, state, p->name);
+ 
+  struct proc *thisproc = myproc();
+  struct proc *userproc;
+  
+  for(thisproc = proc; thisproc < &proc[NPROC]; thisproc++){
+    copyout(thisproc->pagetable, addr, (char *)&userproc, sizeof(userproc));
+    printf("%d %s %s", thisproc->pid, thisproc->name);
     printf("\n");
   }
-  
-  //copied from file.filestat
-  //struct proc *p = myproc();
-  struct stat st;
-  
-  if(f->type == FD_INODE || f->type == FD_DEVICE){
-    ilock(f->ip);
-    stati(f->ip, &st);
-    iunlock(f->ip);
-    if(copyout(p->pagetable, addr, (char *)&st, sizeof(st)) < 0)
-      return -1;
-    return 0;
-  }
-  return -1;
-  
 }
+
+

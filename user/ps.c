@@ -5,18 +5,28 @@
 #include "kernel/types.h"
 #include "user/uproc.h"
 #include "user/user.h"
+#include "kernel/proc.h"
+
 
 int
 main(int argc, char **argv)
 {
+
   struct uproc uproc[NPROC];
   int nprocs;
 
   /********************************
    * Add any additional variables or data structures you will need
    ********************************/
-
-
+/*
+  static char *states[] = {
+  [UNUSED]    "unused",
+  [SLEEPING]  "sleep ",
+  [RUNNABLE]  "runble",
+  [RUNNING]   "run   ",
+  [ZOMBIE]    "zombie",
+   };
+*/
 
   nprocs = getprocs(uproc);
   if (nprocs < 0)
@@ -31,7 +41,6 @@ main(int argc, char **argv)
    * you will be outputting the first nprocs elements of the uproc array
    * and all will have active states.
    *********************************/ 
-
 
 
 
