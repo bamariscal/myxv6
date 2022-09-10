@@ -7,12 +7,6 @@
 #include "spinlock.h"
 #include "proc.h"
 
-#include "stat.h"
-#include "fs.h"
-#include "sleeplock.h"
-#include "file.h"
-#include "fcntl.h"
-
 uint64
 sys_exit(void)
 {
@@ -89,35 +83,6 @@ sys_kill(void)
   return kill(pid);
 }
 
-static int
-argfd(int n, int *pfd, struct file **pf)
-{
-  int fd;
-  struct file *f;
-
-  if(argint(n, &fd) < 0)
-    return -1;
-  if(fd < 0 || fd >= NOFILE || (f=myproc()->ofile[fd]) == 0)
-    return -1;
-  if(pfd)
-    *pfd = fd;
-  if(pf)
-    *pf = f;
-  return 0;
-}
-
-uint64
-sys_getprocs(void)
-{
-  struct file *f;
-  uint64 st; // user pointer to struct stat
-
-  if(argfd(0, 0, &f) < 0 || argaddr(1, &st) < 0)
-    return -1;
-  return filestat(f, st);
-}
-
-
 // return how many clock tick interrupts have occurred
 // since start.
 uint64
@@ -130,3 +95,15 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+uint64
+sys_getprocs(void) //uint64 addr as alt
+{
+    uint64 addr;	
+    if(argaddr(0, &addr) <0){
+    return -1;
+    }	
+    return procinfo(addr);
+}
+
+

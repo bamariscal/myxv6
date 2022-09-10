@@ -5,7 +5,6 @@
 #include "kernel/types.h"
 #include "user/uproc.h"
 #include "user/user.h"
-#include "kernel/proc.h"
 
 
 int
@@ -13,12 +12,9 @@ main(int argc, char **argv)
 {
 
   struct uproc uproc[NPROC];
+  struct uproc *up;
   int nprocs;
-
-  /********************************
-   * Add any additional variables or data structures you will need
-   ********************************/
-/*
+  
   static char *states[] = {
   [UNUSED]    "unused",
   [SLEEPING]  "sleep ",
@@ -26,23 +22,15 @@ main(int argc, char **argv)
   [RUNNING]   "run   ",
   [ZOMBIE]    "zombie",
    };
-*/
 
   nprocs = getprocs(uproc);
   if (nprocs < 0)
     exit(-1);
 
-  // You can remove the following print statement
-  printf("%d processes\n", nprocs);
-
-  /*********************************
-   * Add your code here to output information returned by getprocs()
-   * Hint: see procdump() code in kernel/console.c, except that here
-   * you will be outputting the first nprocs elements of the uproc array
-   * and all will have active states.
-   *********************************/ 
-
-
+  printf("Pid\tState\tSize\tParent\tName\n");
+  for(up = uproc; up < &uproc[nprocs]; up++){
+   printf("%d\t%s\t%d\t%d\t%s\n",up->pid,states[up->state], up->size, up->ppid,up->name);
+}
 
 
   exit(0);

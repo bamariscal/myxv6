@@ -661,18 +661,51 @@ procdump(void)
   }
 }
 
-void
+int
 procinfo(uint64 addr)
 {
- 
-  struct proc *thisproc = myproc();
-  struct proc *userproc;
-  
-  for(thisproc = proc; thisproc < &proc[NPROC]; thisproc++){
-    copyout(thisproc->pagetable, addr, (char *)&userproc, sizeof(userproc));
-    printf("%d %s %s", thisproc->pid, thisproc->name);
-    printf("\n");
-  }
+   
+   struct proc *op = myproc();
+   struct proc *currentproc;
+   
+   ;struct uproc{
+   int pid;
+   enum procstate state;
+   uint64 size;
+   int ppid;
+   char name[16];   
+   };
+   
+   struct uproc up;
+   
+   
+   int count = 0;
+   for(currentproc = proc; currentproc < &proc[NPROC]; currentproc++)
+   {
+   	if(currentproc->state == UNUSED)
+   		continue;
+   	if(currentproc->state >= 0)
+   		count++;
+   	
+   	up.pid = currentproc->pid;
+   	up.state = currentproc->state;
+   	up.size = currentproc->sz;
+   	
+   	if(currentproc-> parent ){
+   	up.ppid = currentproc-> parent->pid;
+   	}
+   	else{
+   	up.ppid = 0;
+   	}
+   	
+   	for(int i = 0; i < 16; i++){
+   		up.name[i] = currentproc -> name[i];
+   	}
+   	copyout(op->pagetable, addr, (char *)&up, sizeof(struct uproc));
+   	addr += sizeof(struct uproc); 
+   	
+   }
+   return count;  
 }
 
 
