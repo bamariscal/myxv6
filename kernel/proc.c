@@ -4,13 +4,8 @@
 #include "riscv.h"
 #include "spinlock.h"
 #include "proc.h"
+#include "pstat.h"
 #include "defs.h"
-
-#include "fs.h"
-#include "sleeplock.h"
-#include "file.h"
-#include "stat.h"
-
 
 struct cpu cpus[NCPU];
 
@@ -643,8 +638,8 @@ procdump(void)
   [SLEEPING]  "sleep ",
   [RUNNABLE]  "runble",
   [RUNNING]   "run   ",
-  [ZOMBIE]    "zombie",
-   };
+  [ZOMBIE]    "zombie"
+  };
   struct proc *p;
   char *state;
 
@@ -661,51 +656,31 @@ procdump(void)
   }
 }
 
+// Fill in user-provided array with info for current processes
+// Return the number of processes found
 int
 procinfo(uint64 addr)
 {
-   
-   struct proc *op = myproc();
-   struct proc *currentproc;
-   
-   ;struct uproc{
-   int pid;
-   enum procstate state;
-   uint64 size;
-   int ppid;
-   char name[16];   
-   };
-   
-   struct uproc up;
-   
-   
-   int count = 0;
-   for(currentproc = proc; currentproc < &proc[NPROC]; currentproc++)
-   {
-   	if(currentproc->state == UNUSED)
-   		continue;
-   	if(currentproc->state >= 0)
-   		count++;
-   	
-   	up.pid = currentproc->pid;
-   	up.state = currentproc->state;
-   	up.size = currentproc->sz;
-   	
-   	if(currentproc-> parent ){
-   	up.ppid = currentproc-> parent->pid;
-   	}
-   	else{
-   	up.ppid = 0;
-   	}
-   	
-   	for(int i = 0; i < 16; i++){
-   		up.name[i] = currentproc -> name[i];
-   	}
-   	copyout(op->pagetable, addr, (char *)&up, sizeof(struct uproc));
-   	addr += sizeof(struct uproc); 
-   	
-   }
-   return count;  
+  struct proc *p;
+  struct proc *thisproc = myproc();
+  struct pstat procinfo;
+  int nprocs = 0;
+  for(p = proc; p < &proc[NPROC]; p++){ 
+    if(p->state == UNUSED)
+      continue;
+    nprocs++;
+    procinfo.pid = p->pid;
+    procinfo.state = p->state;
+    procinfo.size = p->sz;
+    if (p->parent)
+      procinfo.ppid = (p->parent)->pid;
+    else
+      procinfo.ppid = 0;
+    for (int i=0; i<16; i++)
+      procinfo.name[i] = p->name[i];
+   if (copyout(thisproc->pagetable, addr, (char *)&procinfo, sizeof(procinfo)) < 0)
+      return -1;
+    addr += sizeof(procinfo);
+  }
+  return nprocs;
 }
-
-
