@@ -1,6 +1,7 @@
 struct stat;
 struct rtcdate;
 struct pstat;
+struct rusage;
 
 // system calls
 int fork(void);
@@ -42,3 +43,5 @@ void free(void*);
 int atoi(const char*);
 int memcmp(const void *, const void *, uint);
 void *memcpy(void *, const void *, uint);
+int getprocs(struct pstat*);
+int wait2(int*, struct rusage*);
