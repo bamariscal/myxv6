@@ -14,6 +14,7 @@ struct proc proc[NPROC];
 struct proc *initproc;
 
 struct queue queue[NQUEUE];
+
 int sched_policy = MLFQ;  // Should be set to RR or MLFQ
 
 int nextpid = 1;
@@ -21,8 +22,11 @@ struct spinlock pid_lock;
 
 extern void forkret(void);
 static void freeproc(struct proc *p);
-
 extern char trampoline[]; // trampoline.S
+
+static int enqueue_at_tail(struct proc *p, int priority);
+static int enqueue_at_head(struct proc *p, int priority);
+static struct proc* dequeue(int priority);
 
 // helps ensure that wakeups of wait()ing
 // parents are not lost. helps obey the
@@ -123,6 +127,9 @@ found:
   p->pid = allocpid();
   p->state = USED;
   p->cputime = 0;
+  p->timeslice = TSTICKSHIGH;
+  p->yielded = 0;
+  p->next = 0;
 
   // Allocate a trapframe page.
   if((p->trapframe = (struct trapframe *)kalloc()) == 0){
@@ -811,7 +818,7 @@ int queue_empty(int priority){
 
 // Enqueues process p at the tail of the scheduler queue with priority == priority
 // p->lock is held on entry
-int 
+static int 
 enqueue_at_tail(struct proc *p, int priority)
 {
 	if (!(p >= proc && p < &proc[NPROC]))
@@ -843,7 +850,7 @@ enqueue_at_tail(struct proc *p, int priority)
 
 // Enqueues process p at the head of the scheduler queue with priority == priority
 // p->lock should be held on entry except for initial enqueue of init
-int 
+static int 
 enqueue_at_head(struct proc *p, int priority)
 {
 	if (!(p >= proc && p < &proc[NPROC]))
@@ -874,7 +881,7 @@ enqueue_at_head(struct proc *p, int priority)
 
 // Dequeues and returns process at head of queue with priority == priority, or
 // returns 0 in the case of an empty queue
-struct proc*
+static struct proc*
 dequeue(int priority)
 {
 struct proc *p;
