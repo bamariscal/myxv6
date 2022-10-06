@@ -22,11 +22,14 @@ struct spinlock pid_lock;
 
 extern void forkret(void);
 static void freeproc(struct proc *p);
-extern char trampoline[]; // trampoline.S
 
+int timeslice(int priority);
+int queue_empty(int priority);
 static int enqueue_at_tail(struct proc *p, int priority);
 static int enqueue_at_head(struct proc *p, int priority);
 static struct proc* dequeue(int priority);
+
+extern char trampoline[]; // trampoline.S
 
 // helps ensure that wakeups of wait()ing
 // parents are not lost. helps obey the
@@ -127,6 +130,7 @@ found:
   p->pid = allocpid();
   p->state = USED;
   p->cputime = 0;
+  p->priority = HIGH;
   p->timeslice = TSTICKSHIGH;
   p->yielded = 0;
   p->next = 0;
@@ -325,7 +329,7 @@ fork(void)
 
   acquire(&np->lock);
   np->state = RUNNABLE;
-  enqueue_at_head(p, HIGH);
+  enqueue_at_tail(p, p->priority);
    
   release(&np->lock);
 
@@ -539,16 +543,14 @@ scheduler(void)
             struct proc *p;
             p = dequeue(HIGH);
             
-            if (!p){ 
-                printf("In !p\n");                
+            if (!p){      
                 p = dequeue(MEDIUM);
             }
-            if (p) {
-                   printf("in p\n");             
+            if (!p) {
                    dequeue(LOW);
           }
+      }
     }
-  }
  }
   
 
@@ -586,7 +588,7 @@ yield(void)
   struct proc *p = myproc();
   acquire(&p->lock);
   p->state = RUNNABLE;
-  enqueue_at_tail(p, HIGH);
+   enqueue_at_tail(p, p->priority);
   sched();
   
   release(&p->lock);
@@ -656,7 +658,7 @@ wakeup(void *chan)
       acquire(&p->lock);
       if(p->state == SLEEPING && p->chan == chan) {
         p->state = RUNNABLE;
-        enqueue_at_tail(p, HIGH);
+         enqueue_at_head(p, p->priority);
       }
       release(&p->lock);
     }
@@ -678,7 +680,7 @@ kill(int pid)
       if(p->state == SLEEPING){
         // Wake process from sleep().
         p->state = RUNNABLE;
-        enqueue_at_tail(p, HIGH);
+        enqueue_at_tail(p, p->priority);
       }
       release(&p->lock);
       return 0;
