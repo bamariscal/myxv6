@@ -112,6 +112,9 @@ int alloc_mmr_listid(void);
 void dealloc_mmr_listid(int);
 void            mmrlistinit(void);
 
+int             mmap(void);
+int             munmap(uint64,uint64);
+
 
 // swtch.S
 void            swtch(struct context*, struct context*);

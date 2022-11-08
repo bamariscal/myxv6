@@ -67,7 +67,29 @@ usertrap(void)
     syscall();
   } else if((which_dev = devintr()) != 0){
     // ok
-  } else {
+  } 
+  
+  else if(r_scause() ==13 || r_scause() ==15){
+
+    uint64 fAddress = r_stval();
+
+    for(int i=0; i<MAX_MMR; i++){
+	if((p->mmr[i].valid) && (fAddress >= p->mmr[i].addr) && fAddress < (p->mmr[i].addr + p->mmr[i].length)){
+
+	  if (r_scause() == 13 && (p->mmr[i].prot & PTE_R))
+	      printf("13 load fault\n");
+	
+	  if(r_scause() == 15 && (p->mmr[i].prot & PTE_W)){
+	      printf("15 store fault\n");
+	      uint64 pAddress = (uint64)kalloc();
+	      uint64 startAddress = PGROUNDDOWN(fAddress);
+	      mappages(p->pagetable,startAddress,PGSIZE,pAddress,p->mmr[i].prot | PTE_U);
+	  }
+	}
+     }
+}
+  
+  else {
     printf("usertrap(): unexpected scause %p pid=%d\n", r_scause(), p->pid);
     printf("            sepc=%p stval=%p\n", r_sepc(), r_stval());
     p->killed = 1;
