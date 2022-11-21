@@ -107,9 +107,9 @@ int             either_copyout(int user_dst, uint64 dst, void *src, uint64 len);
 int             either_copyin(void *dst, int user_src, uint64 src, uint64 len);
 void            procdump(void);
 int             procinfo(uint64);
-struct mmr_list* get_mmr_list(int);
-int alloc_mmr_listid(void);
-void dealloc_mmr_listid(int);
+struct          mmr_list* get_mmr_list(int);
+int             alloc_mmr_listid(void);
+void            dealloc_mmr_listid(int);
 void            mmrlistinit(void);
 
 int             mmap(void);

@@ -73,20 +73,35 @@ usertrap(void)
 
     uint64 fAddress = r_stval();
 
-    for(int i=0; i<MAX_MMR; i++){
+    int i;
+    for(i = 0; i<MAX_MMR; i++){
 	if((p->mmr[i].valid) && (fAddress >= p->mmr[i].addr) && fAddress < (p->mmr[i].addr + p->mmr[i].length)){
 
-	  if (r_scause() == 13 && (p->mmr[i].prot & PTE_R))
-	      printf("13 load fault\n");
-	
-	  if(r_scause() == 15 && (p->mmr[i].prot & PTE_W)){
-	      printf("15 store fault\n");
-	      uint64 pAddress = (uint64)kalloc();
-	      uint64 startAddress = PGROUNDDOWN(fAddress);
-	      mappages(p->pagetable,startAddress,PGSIZE,pAddress,p->mmr[i].prot | PTE_U);
-	  }
+	  if (r_scause() == 13){
+            if (!(p->mmr[i].prot & PTE_R))
+              p->killed=1;
+            else{
+            uint64 physAddr = (uint64)kalloc();
+            uint64 startAddr = PGROUNDDOWN(fAddress);
+            mappages(p->pagetable,startAddr,PGSIZE,physAddr,p->mmr[i].prot | PTE_U);
+            }
+        }
+        
+         if(r_scause() == 15){
+	    if (!(p->mmr[i].prot & PTE_W))
+	      p->killed=1;
+            else{
+            uint64 physAddr = (uint64)kalloc();
+            uint64 startAddr = PGROUNDDOWN(fAddress);
+            mappages(p->pagetable,startAddr,PGSIZE,physAddr,p->mmr[i].prot | PTE_U);
+            }
+        }
+        
+        break;
 	}
      }
+        if (i==MAX_MMR)
+          p->killed=1;
 }
   else {
     printf("usertrap(): unexpected scause %p pid=%d\n", r_scause(), p->pid);
