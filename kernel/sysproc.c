@@ -112,3 +112,23 @@ uint64
 sys_freepmem(void){
     return kfreepagecount();
 }
+
+uint64
+sys_sem_init(void){
+  return NSEM;
+}
+
+uint64
+sys_sem_destroy(void){
+  return NSEM;
+}
+
+uint64
+sys_sem_wait(void){
+  return NSEM;
+}
+
+uint64
+sys_sem_post(void){
+  return NSEM;
+}

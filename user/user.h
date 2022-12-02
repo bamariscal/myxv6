@@ -48,3 +48,8 @@ void *memcpy(void *, const void *, uint);
 
 int *mmap(void*, uint64, int,int,int,int);
 int munmap(void*, int);
+
+int sem_init(int,int);
+int sem_destroy(int);
+int sem_post(int,int);
+int sem_wait(int,int);
