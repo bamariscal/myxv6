@@ -45,3 +45,6 @@ int memcmp(const void *, const void *, uint);
 void *memcpy(void *, const void *, uint);
 int getprocs(struct pstat*);
 int wait2(int*, struct rusage*);
+
+//lab5
+int fstat(int, struct stat *);
